@@ -23,7 +23,6 @@ public class MySmsReceiver extends BroadcastReceiver {
         // Get the SMS message.
         Bundle bundle = intent.getExtras();
         SmsMessage[] msgs;
-        String strMessage = "";
         String format = bundle.getString("format");
         // Retrieve the SMS message received.
         Object[] pdus = (Object[]) bundle.get(pdu_type);
@@ -42,11 +41,15 @@ public class MySmsReceiver extends BroadcastReceiver {
                     msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
                 }
                 // Build the message to show.
-                strMessage += "SMS from " + msgs[i].getOriginatingAddress();
-                strMessage += " :" + msgs[i].getMessageBody() + "\n";
                 // Log and display the SMS message.
-                Log.d(TAG, "onReceive: " + strMessage);
-                Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
+                Log.d(TAG, "onReceive");
+
+                Intent smsIntent = new Intent(context, MySmsService.class);
+                smsIntent.putExtra("sender", msgs[i].getOriginatingAddress());
+                smsIntent.putExtra("body", msgs[i].getMessageBody());
+                smsIntent.setType("text/plain");
+
+                context.startService(smsIntent);
             }
         }
     }
