@@ -4,8 +4,12 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
+import com.example.smsparcerwip.data.Message;
+import com.example.smsparcerwip.data.MessageDao;
+import com.example.smsparcerwip.data.MessageDatabase;
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.NonNull;
@@ -19,12 +23,17 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
 
 import com.example.smsparcerwip.databinding.ActivityMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.Toast;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,9 +42,15 @@ public class MainActivity extends AppCompatActivity {
 
     private int RECEIVE_SMS_PERMISSION_CODE = 1;
 
+    private MessageDatabase database;
+    private MessageDao messageDao;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        database = Room.databaseBuilder(this, MessageDatabase.class, "message-database").build();
+        messageDao = database.messageDao();
 
         if (ContextCompat.checkSelfPermission(MainActivity.this,
                 Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED) {
@@ -54,13 +69,8 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        Button button = findViewById(R.id.button);
+        button.setOnClickListener(view -> new DisplayMessages().execute());
     }
 
     private void requestReceiveSmsPermission() {
@@ -117,5 +127,24 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    class DisplayMessages extends AsyncTask<Void, Void, String> {
+
+        List<Message> messageList;
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            messageList = messageDao.getAllMessages();
+            return String.valueOf(messageList.size());
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if (!messageList.isEmpty()) {
+                Toast.makeText(MainActivity.this, messageList.get(messageList.size() - 1).getBody(), Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

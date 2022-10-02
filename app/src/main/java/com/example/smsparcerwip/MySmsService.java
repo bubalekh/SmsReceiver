@@ -5,8 +5,16 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
+
+import androidx.room.Room;
+
+import com.example.smsparcerwip.data.Message;
+import com.example.smsparcerwip.data.MessageDao;
+import com.example.smsparcerwip.data.MessageDatabase;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -21,20 +29,25 @@ public class MySmsService extends Service {
     public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private final String TAG = "ServiceTag";
     //TODO: Add a proper comparing mechanism with Room!
-    private final String allowedSenders = "Unibank";
+    private final String allowedSenders = "Unibank,098 008175,098008175,+37498008175";
     private final String url = "http://localhost:8080";
     private final OkHttpClient httpClient = new OkHttpClient()
             .newBuilder()
             .writeTimeout(1000, TimeUnit.MILLISECONDS)
             .build();
     private int serviceId = 0;
+
+    private MessageDatabase database;
+    private MessageDao messageDao;
+
     public MySmsService() {
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        /*httpClient.*/
+        database = Room.databaseBuilder(getApplicationContext(), MessageDatabase.class, "message-database").build();
+        messageDao = database.messageDao();
         //Тут сделать все необходимое для работы с API
     }
 
@@ -85,6 +98,7 @@ public class MySmsService extends Service {
                         "   \"body\": " + apiQuery.getBody() + "\n" +
                         "}";
                 try {
+                    messageDao.addReceivedMessage(new Message(apiQuery.getSender(), apiQuery.getBody()));
                     response = post(apiQuery.getUrl(), requestBody);
                 } catch (IOException e) {
                     e.printStackTrace();
