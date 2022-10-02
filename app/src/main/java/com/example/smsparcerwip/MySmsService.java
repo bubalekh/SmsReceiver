@@ -29,7 +29,7 @@ public class MySmsService extends Service {
     public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private final String TAG = "ServiceTag";
     //TODO: Add a proper comparing mechanism with Room!
-    private final String allowedSenders = "Unibank,098 008175,098008175,+37498008175";
+    private final String allowedSenders = "Unibank";
     private final String url = "http://localhost:8080";
     private final OkHttpClient httpClient = new OkHttpClient()
             .newBuilder()
