@@ -5,8 +5,16 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
+
+import androidx.room.Room;
+
+import com.example.smsparcerwip.data.Message;
+import com.example.smsparcerwip.data.MessageDao;
+import com.example.smsparcerwip.data.MessageDatabase;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -28,13 +36,18 @@ public class MySmsService extends Service {
             .writeTimeout(1000, TimeUnit.MILLISECONDS)
             .build();
     private int serviceId = 0;
+
+    private MessageDatabase database;
+    private MessageDao messageDao;
+
     public MySmsService() {
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        /*httpClient.*/
+        database = Room.databaseBuilder(getApplicationContext(), MessageDatabase.class, "message-database").build();
+        messageDao = database.messageDao();
         //Тут сделать все необходимое для работы с API
     }
 
@@ -85,6 +98,7 @@ public class MySmsService extends Service {
                         "   \"body\": " + apiQuery.getBody() + "\n" +
                         "}";
                 try {
+                    messageDao.addReceivedMessage(new Message(apiQuery.getSender(), apiQuery.getBody()));
                     response = post(apiQuery.getUrl(), requestBody);
                 } catch (IOException e) {
                     e.printStackTrace();
